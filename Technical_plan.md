@@ -2,7 +2,7 @@
 
 ## 1. Executive Summary & Technology Strategy
 
-The Medical Triage Chatbot leverages the latest industry-standard, high-demand machine learning (ML) and Large Language Model (LLM) tools. The technical architecture combines **Agentic State Graphs**, **Retrieval-Augmented Generation (RAG)** grounded in Emergency Severity Index (ESI) protocols, **Deterministic Safety Guardrails**, and robust **MLOps Observability**.
+The Medical Triage Chatbot leverages a streamlined, state-of-the-art machine learning (ML) and Large Language Model (LLM) technical stack optimized for single-developer efficiency, high performance, and strict clinical safety. The architecture combines **LangGraph Agentic State Graphs**, **ChromaDB Retrieval-Augmented Generation (RAG)** grounded in Emergency Severity Index (ESI) protocols, **Deterministic Pure-Python Red-Flag Interceptors**, **Groq Ultra-Fast API Inference**, and **LangSmith & Ragas Observability**.
 
 ---
 
@@ -10,67 +10,69 @@ The Medical Triage Chatbot leverages the latest industry-standard, high-demand m
 
 ```
                  +---------------------------------------+
-                 |       Patient Interactive UI          |
-                 | (React + Tailwind / Streamlit / Chat) |
+                 |            Chainlit UI                |
+                 |      (Interactive Chat Interface)     |
                  +------------------+--------------------+
                                     |
                                     v
                  +------------------+--------------------+
-                 |    FastAPI Async Gateway Server       |
+                 |    LangGraph Agentic Workflow Engine   |
                  +------------------+--------------------+
                                     |
-                                    v
-                 +------------------+--------------------+
-                 |   NeMo Guardrails / Pydantic Safety   |  <--- Red-Flag Deterministic Rules
-                 | (PII Masking & Llama-Guard 3 Safety)  |       (Level 1 Emergency Intercept)
-                 +------------------+--------------------+
+                    [LangGraph Red-Flag Check Node]
+                    (Pure Python Deterministic Regex)
                                     |
-                                    v
-                 +------------------+--------------------+
-                 |   LangGraph Agentic Workflow Engine    |
-                 +--------+---------------------+--------+
-                          |                     |
-                          v                     v
-            +-------------+-------+     +-------+-------------+
-            | RAG Clinical Vector |     | LLM Inference Engine|
-            | Qdrant / ChromaDB   |     | vLLM / Groq / API   |
-            | PubMedBERT Embeds   |     | (LLaMA-3.3 / MedLLM)|
-            +---------------------+     +---------------------+
-                                    |
-                                    v
-                 +------------------+--------------------+
-                 |   MLOps & Evaluation Pipeline         |
-                 | (LangSmith / MLflow / DeepEval)       |
-                 +---------------------------------------+
+              +---------------------+---------------------+
+              | (Red Flag Detected)                       | (No Red Flags)
+              v                                           v
+  +-----------------------+                   +-----------------------+
+  |  Emergency Output     |                   |  Clinical RAG         |
+  |  Node (Level 1 Alert) |                   |  Retriever Node       |
+  |  *Bypasses RAG & LLM* |                   |  (ChromaDB Vector DB) |
+  +-----------------------+                   +-----------+-----------+
+                                                          |
+                                                          v
+                                              +-----------------------+
+                                              |  Groq LLM Engine      |
+                                              |  (LLaMA-3.3-70B API)  |
+                                              +-----------+-----------+
+                                                          |
+                                                          v
+                                              +-----------------------+
+                                              | LangSmith & Ragas     |
+                                              | Evaluation Suite      |
+                                              +-----------------------+
 ```
 
 ---
 
-## 3. Technology Stack & Trending Tooling Matrix
+## 3. Technology Stack & Tooling Matrix
 
-| Component / Layer | Technology / Library | Industry Relevance & Justification |
+| Component / Layer | Technology / Library | Selection Rationale & Purpose |
 | :--- | :--- | :--- |
-| **Agent Orchestration** | **LangGraph / LangChain** | Industry standard for stateful multi-step LLM loops, branching triage decisions, and agent memory management. |
-| **Prompt Engineering & Tuning** | **DSPy** | Algorithmic prompt optimization & structured output enforcement; eliminates manual prompt tweaking. |
-| **LLM Inference Engines** | **Groq API** (Cloud) & **vLLM / Ollama** (Local) | Groq for sub-500ms inference; vLLM for high-throughput GPU serving of local open-weights medical LLMs (e.g., LLaMA-3.3-70B, BioMistral). |
-| **Vector DB & RAG** | **Qdrant** (or **ChromaDB**) + **PubMedBERT** / **bge-large-en-v1.5** | High-performance vector search indexing the ESI Handbook v4 and emergency triage clinical guidelines for grounded, non-hallucinated decisions. |
-| **Safety & Guardrails** | **NeMo Guardrails**, **Llama Guard 3**, **Pydantic v2** | Enterprise-grade safety framework for input/output verification, jailbreak prevention, PII scrubbing, and mandatory Level 1 red-flag overrides. |
-| **Backend Framework** | **FastAPI** + **Uvicorn** + **AsyncIO** | Modern high-speed Python REST API framework with native Pydantic data validation and WebSocket streaming support. |
-| **MLOps & Observability** | **LangSmith** & **MLflow** | Real-time prompt tracing, token cost monitoring, latency tracking, and LLM call trajectory logging. |
-| **Evaluation Framework** | **DeepEval** / **Ragas** | Continuous LLM benchmarking targeting clinical accuracy, hallucination detection, and **zero under-triage verification**. |
-| **Frontend UI** | **Streamlit** / **Chainlit** (Rapid) or **Vite + React + TailwindCSS** | Interactive chat interface featuring color-coded triage badges, real-time vital sign intake forms, and nurse summary view. |
+| **Agent Orchestration** | **LangGraph / LangChain** | Stateful multi-step LLM loops, branching triage decisions, and red-flag conditional routing. |
+| **LLM Inference Engine** | **Groq API** (`LLaMA-3.3-70B-Versatile`) | Ultra-fast cloud inference ($< 500\text{ms}$ latency) eliminating local GPU / server overhead. |
+| **Vector DB & RAG** | **ChromaDB** + **PubMedBERT** | Embedded, lightweight, Python-native vector store indexing the ESI Handbook v4 for grounded decisions. |
+| **Red-Flag & Safety Interceptor** | **Pure Python Regex / Keyword Node in LangGraph** + **Pydantic v2** | Zero-LLM, instant deterministic check for emergency keywords. Immediately routes to Level 1 Alert without LLM latency or cost. |
+| **User Interface (UI)** | **Chainlit** | Modern, native Python conversational interface with streaming responses, UI action buttons, and markdown support. |
+| **Observability & Tracing** | **LangSmith** | Complete execution logging, prompt versioning, latency tracking, and LangGraph trajectory debugging. |
+| **RAG & Model Evaluation** | **Ragas** | RAG evaluation framework measuring Faithfulness, Answer Relevance, Context Precision, and Triage Accuracy. |
 
 ---
 
 ## 4. Core Technical Components & Modules
 
 ### 4.1 LangGraph Stateful Triage Workflow
-The conversational graph consists of 5 main state nodes:
-1. **Intake & Extraction Node**: Parses free-form patient descriptions into structured JSON (`Symptom`, `Severity`, `Onset`, `Vitals`).
-2. **Red-Flag Intercept Node**: Evaluates symptoms against deterministic clinical rules (e.g., severe dyspnea, chest pressure, stroke symptoms). If triggered $\rightarrow$ Immediate Level 1 output.
-3. **Clinical RAG Retriever Node**: Queries vector store for relevant ESI guidelines matching extracted symptoms.
-4. **Resource Estimator Node**: Predicts required hospital resources (0, 1, or $\ge 2$) for Level 3 vs Level 4 vs Level 5 differentiation.
-5. **Final Triage & Explanation Generator Node**: Synthesizes final triage level (1-5), safety advice, and physician SBAR summary.
+The graph orchestrates 4 primary nodes:
+1. **Red-Flag Intercept Node (Pure Python / No LLM)**: 
+   - Scans incoming patient text against deterministic medical regex/keyword rules (e.g., *"crushing chest pain radiating to arm"*, *"unresponsive"*, *"anaphylaxis"*, *"FAST stroke signs"*).
+   - **If emergency match found**: Immediately routes to `EmergencyAlertNode`, setting `TriageLevel = 1` and skipping RAG and LLM execution entirely.
+2. **Clinical RAG Retriever Node**:
+   - Executes hybrid vector search against **ChromaDB** using ESI guidelines to retrieve exact diagnostic resource definitions using rank_bm25.
+3. **LLM Triage & Resource Estimator Node (Groq)**:
+   - Calls Groq API with retrieved ESI context to evaluate vital signs, count required resources (0, 1, or $\ge 2$), and determine Levels 2, 3, 4, or 5.
+4. **Output Formatter Node**:
+   - Uses **Pydantic v2** to ensure structured JSON output matching the clinical `TriageAssessment` model.
 
 ### 4.2 Data Models & Schema (Pydantic v2)
 
@@ -107,24 +109,22 @@ class TriageAssessment(BaseModel):
     target_wait_time: str
 ```
 
-### 4.3 RAG Knowledge Base Architecture
-- **Source Documents**: Emergency Severity Index (ESI) Implementation Handbook v4, CDC Triage Protocols, PubMed Emergency Medicine guidelines.
-- **Embedding Pipeline**: Chunking with semantic splitters $\rightarrow$ embedding with `PubMedBERT` or `bge-large-en-v1.5` $\rightarrow$ stored in `Qdrant`.
-- **Hybrid Retrieval**: Dense Vector Similarity + BM25 Sparse Keyword search for exact medical terminologies (e.g., "diaphoresis", "hemoptysis").
-
-### 4.4 Guardrails & Safety Pipeline
-1. **Input Shield**: Llama Guard 3 screens for malformed queries, prompt injections, or off-topic requests.
-2. **PII Anonymizer**: Replaces names, SSNs, phone numbers with tokens before API dispatch.
-3. **Clinical Red-Flag Guard**: Hard-coded Python checks for high-acuity keywords that force Level 1/Level 2 routing regardless of LLM response.
-4. **Output Verification**: Pydantic validation ensures outputs strictly adhere to the `TriageAssessment` JSON structure.
+### 4.3 RAG Knowledge Base Architecture (ChromaDB)
+- **Knowledge Corpus**: ESI Implementation Handbook v4, CDC Triage Protocols. Ingest data using **LangChain**.
+- **Vector DB**: Local persistent **ChromaDB** store (`./chroma_db`).
+- **Embedding Function**: HuggingFace `PubMedBERT` embeddings.
 
 ---
 
-## 5. Evaluation & MLOps Framework
+## 5. Evaluation & MLOps Framework (LangSmith + Ragas)
 
-- **Dataset for Testing**: Synthetic clinical vignettes derived from public triage benchmarks (MIMIC-IV emergency department dataset subsets formatted for ESI classification).
-- **Automated Metric Suite (via DeepEval / Ragas)**:
-  - **Triage Accuracy**: Correct 1-5 level match against ground truth physician annotations.
-  - **Under-Triage Penalty Score**: Severe penalty for misclassifying Level 1/2 as Level 3/4/5.
-  - **Over-Triage Rate**: Tracks resource over-estimation without endangering patient safety.
-  - **Hallucination Metric**: Verifies that medical advice remains within context retrieved by RAG.
+- **Execution Tracing (LangSmith)**:
+  - Every conversation step in LangGraph is automatically logged to **LangSmith**.
+  - Tracks step-by-step state transitions, Groq token consumption, and node latency.
+- **RAG Evaluation Suite (Ragas)**:
+  - Benchmarked against 50+ clinical vignettes (no PII handling implemented; this system is designed for synthetic/session data only, not real PHI).
+  - **Ragas Metrics**:
+    - `faithfulness`: Ensures reasoning strictly adheres to retrieved ESI guidelines.
+    - `answer_relevancy`: Verifies patient questions are answered accurately.
+    - `context_precision`: Evaluates ChromaDB retrieval accuracy.
+    - `under_triage_score`: Custom metric enforcing zero misclassification of Level 1/2 emergencies.

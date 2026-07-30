@@ -1,3 +1,10 @@
 requests
 dotenv
-os
+langgraph
+langchain
+fastapi
+pydantic
+qdrant-client
+groq
+vllm
+deepeval

@@ -2,7 +2,7 @@
 
 ## 1. Project Overview & Execution Strategy
 
-This implementation plan outlines the step-by-step roadmap for engineering the **5-Level Medical Triage Chatbot**. The timeline is structured into five distinct phases, moving from project setup and safety guardrails to agentic graph orchestration, UI development, and rigorous clinical evaluation.
+This implementation plan outlines the step-by-step roadmap for building the **5-Level Medical Triage Chatbot**. The timeline is structured into five distinct phases, moving from project setup to ChromaDB RAG indexing, LangGraph agent orchestration with pure-Python red-flag routing, Chainlit UI integration, and Ragas/LangSmith evaluation.
 
 ---
 
@@ -10,27 +10,27 @@ This implementation plan outlines the step-by-step roadmap for engineering the *
 
 ```
 +-----------------------------------------------------------------------------------+
-| Phase 1: Environment Setup & Core Data Schemas                     (Week 1)       |
+| Phase 1: Environment Setup & Data Schemas                          (Week 1)       |
 +-----------------------------------------------------------------------------------+
                                          |
                                          v
 +-----------------------------------------------------------------------------------+
-| Phase 2: RAG Pipeline & Safety Guardrails Integration             (Week 2)       |
+| Phase 2: ChromaDB RAG & Pure-Python Red-Flag Interceptor           (Week 2)       |
 +-----------------------------------------------------------------------------------+
                                          |
                                          v
 +-----------------------------------------------------------------------------------+
-| Phase 3: LangGraph Agentic Engine & Clinical Logic                 (Week 3)       |
+| Phase 3: LangGraph Agent Engine & Groq LLM Integration              (Week 3)       |
 +-----------------------------------------------------------------------------------+
                                          |
                                          v
 +-----------------------------------------------------------------------------------+
-| Phase 4: FastAPI Backend & Interactive UI Development              (Week 4)       |
+| Phase 4: Chainlit Interactive Chat Application                     (Week 4)       |
 +-----------------------------------------------------------------------------------+
                                          |
                                          v
 +-----------------------------------------------------------------------------------+
-| Phase 5: MLOps, Evaluation Benchmarks & Safety Verification        (Week 5)       |
+| Phase 5: LangSmith Tracing & Ragas Evaluation Benchmark            (Week 5)       |
 +-----------------------------------------------------------------------------------+
 ```
 
@@ -39,86 +39,78 @@ This implementation plan outlines the step-by-step roadmap for engineering the *
 ## 3. Phase Breakdown & Key Deliverables
 
 ### Phase 1: Environment Setup, Clinical Schemas & Foundation
-**Goal**: Establish repository structure, modern Python environment, and Pydantic data schemas for 5-level triage.
+**Goal**: Establish clean repository structure, virtual environment, and Pydantic data schemas for 5-level ESI triage.
 
 - [ ] **Task 1.1: Project Setup & Package Management**
-  - Configure Python $3.11+$ virtual environment using `uv` / `poetry`.
-  - Install core dependencies (`langgraph`, `langchain`, `fastapi`, `pydantic`, `qdrant-client`, `groq`, `vllm`, `deepeval`).
+  - Configure Python $3.11+$ virtual environment using `uv` / `venv`.
+  - Install core dependencies (`langgraph`, `langchain`, `pydantic`, `chromadb`, `groq`, `chainlit`, `ragas`, `langsmith`).
 - [ ] **Task 1.2: Clinical Schema Definition (`schemas.py`)**
   - Implement Pydantic models for `PatientInput`, `VitalSigns`, `ResourceEstimate`, and `TriageAssessment`.
   - Define enum constants for ESI Levels 1 through 5.
-- [ ] **Task 1.3: Mock Clinical Test Dataset Creation**
-  - Create a benchmark dataset of 50 patient vignettes covering all 5 ESI levels with ground-truth physician labels.
+- [ ] **Task 1.3: Benchmark Vignette Dataset Creation**
+  - Create a test dataset of 50 patient vignettes covering all 5 ESI levels with ground-truth physician labels (`tests/fixtures/vignettes.json`).
 
-**Deliverables**: Clean repo setup, validated Pydantic schemas, baseline test dataset (`tests/fixtures/vignettes.json`).
+**Deliverables**: Clean project environment, validated Pydantic schemas, baseline test dataset.
 
 ---
 
-### Phase 2: RAG Pipeline & Deterministic Guardrails
-**Goal**: Build knowledge retrieval grounded in the ESI Handbook and implement safety guardrails for Level 1 red flags.
+### Phase 2: ChromaDB RAG & Pure-Python Red-Flag Interceptor
+**Goal**: Build knowledge retrieval grounded in the ESI Handbook and implement a pure-Python red-flag keyword node in LangGraph.
 
-- [ ] **Task 2.1: ESI Clinical Knowledge Indexing**
+- [ ] **Task 2.1: ESI Clinical Knowledge Indexing (ChromaDB)**
   - Ingest ESI Implementation Handbook v4 and emergency clinical guidelines.
-  - Chunk text using semantic splitters; generate embeddings via `PubMedBERT` / `bge-large-en-v1.5`.
-  - Store vectors in `Qdrant` / `ChromaDB` with hybrid BM25 + dense retrieval.
-- [ ] **Task 2.2: Red-Flag Deterministic Interceptor (`guardrails.py`)**
-  - Build keyword and semantic regex rules for immediate Level 1 overrides (e.g., severe chest pain, FAST stroke signs, anaphylaxis).
-  - Integrate PII anonymization maskers.
-- [ ] **Task 2.3: Integration Testing for Guardrails**
-  - Verify that 100% of Level 1 test cases bypass standard LLM processing and immediately trigger Red Alert protocols.
+  - Generate embeddings using `bge-large-en-v1.5` / `PubMedBERT` and index into persistent **ChromaDB** (`./chroma_db`).
+- [ ] **Task 2.2: Pure-Python Red-Flag Deterministic Node (`red_flags.py`)**
+  - Implement regex & keyword rules for high-acuity symptoms (e.g., *"crushing chest pain radiating to arm"*, *"unresponsive"*, *"anaphylaxis"*, *"stroke signs"*).
+  - Ensure this node bypasses RAG and LLM calls when triggered, directly returning a Level 1 Emergency Alert.
+- [ ] **Task 2.3: Red-Flag Unit Test Suite**
+  - Unit test 100% of emergency vignettes to guarantee zero under-triage and instant execution without LLM latency.
 
-**Deliverables**: Functional `Qdrant` vector store, `RedFlagGuardrail` module, zero under-triage safety test suite.
+**Deliverables**: Persistent ChromaDB vector store, deterministic `RedFlagNode`, unit test suite.
 
 ---
 
-### Phase 3: LangGraph Agentic Triage Engine
-**Goal**: Orchestrate the conversational state graph to collect symptoms, assess vitals, retrieve ESI guidelines, estimate resources, and assign triage levels.
+### Phase 3: LangGraph Agent Engine & Groq LLM Integration
+**Goal**: Orchestrate the conversational state graph to collect symptoms, assess vitals, retrieve ESI guidelines, estimate resources, and assign triage levels via Groq API.
 
 - [ ] **Task 3.1: LangGraph State Graph Design (`graph.py`)**
-  - Define state graph nodes: `IntakeNode`, `RedFlagNode`, `RetrieverNode`, `ResourceEstimatorNode`, `FinalClassifierNode`.
-  - Implement dynamic edge routing based on missing patient info or red-flag presence.
-- [ ] **Task 3.2: LLM Provider Integration & Prompt Optimization**
-  - Connect Groq LLaMA-3.3-70B API as primary LLM engine with fallback to OpenAI / vLLM local instance.
-  - Optimize structured JSON output prompting using **DSPy**.
-- [ ] **Task 3.3: Resource Counting Logic**
-  - Implement reasoning steps for estimating diagnostic/therapeutic hospital resources to accurately distinguish Level 3 ($\ge 2$ resources), Level 4 ($1$ simple resource), and Level 5 ($0$ resources).
+  - Define graph state and nodes: `RedFlagNode`, `IntakeNode`, `RetrieverNode`, `ResourceEstimatorNode`, `FinalClassifierNode`.
+  - Configure conditional routing: If `RedFlagNode` fires $\rightarrow$ bypass to `EmergencyAlertNode`; else $\rightarrow$ proceed through RAG & Groq LLM.
+- [ ] **Task 3.2: Groq LLM API Integration (`LLaMA-3.3-70B`)**
+  - Configure Groq API client with structured Pydantic output parsing.
+- [ ] **Task 3.3: Resource Counting & Decision Reasoning**
+  - Implement prompt logic to estimate hospital resources (0, 1, or $\ge 2$) for Level 3 vs Level 4 vs Level 5 classification.
 
-**Deliverables**: Fully operational `TriageGraphEngine` capable of multi-turn conversational intake and structured 5-level output generation.
-
----
-
-### Phase 4: FastAPI Backend & Interactive UI
-**Goal**: Wrap the triage engine in a high-throughput async REST API and create an intuitive UI for patients and triage nurses.
-
-- [ ] **Task 4.1: Async REST & WebSocket API (`main.py`)**
-  - Build `/api/v1/chat` endpoint with streaming response support.
-  - Build `/api/v1/triage/assess` endpoint for batch vignette assessment.
-  - Integrate CORS middleware and error handlers.
-- [ ] **Task 4.2: Frontend Application Development**
-  - Develop interactive Web UI using **Streamlit / Chainlit** or **React + Vite + TailwindCSS**.
-  - Components:
-    - Conversational Chat Feed with typing indicators.
-    - Live Risk Urgency Badge (Color-coded: Red, Orange, Yellow, Green, Blue).
-    - Vital Signs Quick Intake Panel.
-    - Nurse Summary Handoff Drawer (SBAR format).
-
-**Deliverables**: Running FastAPI server with OpenAPI docs (`/docs`), responsive frontend application.
+**Deliverables**: Operational `TriageGraphEngine` performing stateful triage logic.
 
 ---
 
-### Phase 5: MLOps, Evaluation Benchmarks & Safety Verification
-**Goal**: Implement comprehensive observability, benchmark model accuracy, verify safety guarantees, and finalize documentation.
+### Phase 4: Chainlit Interactive Chat Application
+**Goal**: Build a modern, responsive chat interface using Chainlit that connects directly to the LangGraph engine.
 
-- [ ] **Task 5.1: MLOps Tracing & Logging**
-  - Integrate **LangSmith** and **MLflow** for full turn-by-turn trace logging, latency tracking, and token usage metrics.
-- [ ] **Task 5.2: Automated Evaluation Suite (`eval_suite.py`)**
-  - Run **DeepEval / Ragas** test pipeline against the 50+ clinical vignette dataset.
-  - Calculate Metrics: Precision/Recall per ESI level, Overall Accuracy ($\ge 90\%$), Under-Triage Penalty Score ($0.0$).
-- [ ] **Task 5.3: Final Documentation & Clinical Disclaimer Audit**
-  - Conduct edge-case testing (jailbreak attempts, nonsensical input, missing vitals).
-  - Finalize README and system deployment guide.
+- [ ] **Task 4.1: Chainlit Application (`app.py`)**
+  - Implement `@cl.on_chat_start` and `@cl.on_message` handlers connecting to `TriageGraphEngine`.
+  - Stream Groq LLM output tokens in real-time to the Chainlit UI.
+- [ ] **Task 4.2: UI Enhancements & Nurse Handoff Summary**
+  - Add interactive element cards for color-coded triage badges (Red = Level 1, Orange = Level 2, Yellow = Level 3, Green = Level 4, Blue = Level 5).
+  - Render clinical SBAR summaries for nurse review.
 
-**Deliverables**: Evaluation benchmark report, LangSmith dashboard integration, production-ready triage chatbot project repository.
+**Deliverables**: Single-command runnable local chat app (`chainlit run app.py`).
+
+---
+
+### Phase 5: LangSmith Tracing & Ragas Evaluation Benchmark
+**Goal**: Integrate full execution tracing with LangSmith and run automated RAG/accuracy benchmarks using Ragas.
+
+- [ ] **Task 5.1: LangSmith Tracing Setup**
+  - Configure `LANGCHAIN_TRACING_V2=true` and `LANGCHAIN_API_KEY` to log execution graphs, node latencies, and token usage to **LangSmith**.
+- [ ] **Task 5.2: Ragas Benchmark Pipeline (`eval_ragas.py`)**
+  - Run Ragas evaluation over the 50 vignette test dataset.
+  - Calculate `faithfulness`, `answer_relevancy`, `context_precision`, and `triage_accuracy`.
+- [ ] **Task 5.3: Project Documentation & Final Audit**
+  - Finalize README.md with clear setup instructions and execution guide.
+
+**Deliverables**: Complete Ragas evaluation report, active LangSmith dashboard workspace, production-ready codebase.
 
 ---
 
@@ -127,7 +119,7 @@ This implementation plan outlines the step-by-step roadmap for engineering the *
 | Milestone | Target Completion | Verification Method & Target Metric |
 | :--- | :--- | :--- |
 | **M1: Schemas & Data** | End of Week 1 | 100% Pydantic validation pass rate on test vignettes. |
-| **M2: Safety Guardrails** | End of Week 2 | Zero under-triage ($0\%$ false negatives) on Level 1 red-flag tests. |
-| **M3: Triage Engine** | End of Week 3 | Successful end-to-end multi-turn conversation execution. |
-| **M4: Full Stack API & UI** | End of Week 4 | Web UI responsive with latency $< 2.0\text{s}$ per chat turn. |
-| **M5: MLOps & Eval** | End of Week 5 | $\ge 90\%$ overall triage accuracy on benchmark dataset; full LangSmith traces. |
+| **M2: ChromaDB & Red Flag** | End of Week 2 | $0\%$ false negatives on Level 1 red-flag regex tests; instant bypass verified. |
+| **M3: LangGraph & Groq** | End of Week 3 | Successful end-to-end multi-turn conversation and ESI level assignment. |
+| **M4: Chainlit Chat App** | End of Week 4 | Local Chainlit UI streaming responses with $< 1.5\text{s}$ turn latency. |
+| **M5: LangSmith & Ragas** | End of Week 5 | $\ge 90\%$ triage accuracy on benchmark vignettes; full LangSmith traces active. |
