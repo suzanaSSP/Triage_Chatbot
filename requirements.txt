@@ -2,9 +2,9 @@ requests
 dotenv
 langgraph
 langchain
-fastapi
 pydantic
-qdrant-client
+chromadb
 groq
-vllm
-deepeval
+chainlit
+ragas
+langsmith

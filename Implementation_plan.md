@@ -41,10 +41,10 @@ This implementation plan outlines the step-by-step roadmap for building the **5-
 ### Phase 1: Environment Setup, Clinical Schemas & Foundation
 **Goal**: Establish clean repository structure, virtual environment, and Pydantic data schemas for 5-level ESI triage.
 
-- [ ] **Task 1.1: Project Setup & Package Management**
+- [✅] **Task 1.1: Project Setup & Package Management**
   - Configure Python $3.11+$ virtual environment using `uv` / `venv`.
   - Install core dependencies (`langgraph`, `langchain`, `pydantic`, `chromadb`, `groq`, `chainlit`, `ragas`, `langsmith`).
-- [ ] **Task 1.2: Clinical Schema Definition (`schemas.py`)**
+- [✅] **Task 1.2: Clinical Schema Definition (`schemas.py`)**
   - Implement Pydantic models for `PatientInput`, `VitalSigns`, `ResourceEstimate`, and `TriageAssessment`.
   - Define enum constants for ESI Levels 1 through 5.
 - [ ] **Task 1.3: Benchmark Vignette Dataset Creation**
