@@ -11,9 +11,6 @@ class ESILevel(int, Enum):
     LEVEL_4_LESS_URGENT = 4
     LEVEL_5_NON_URGENT = 5
 
-# Backward-compatibility / semantic alias
-Status = ESILevel
-
 class VitalSigns(BaseModel):
     heart_rate: Optional[int] = Field(None, description="Beats per minute (bpm)")
     blood_pressure_systolic: Optional[int] = Field(None, description="mmHg")
@@ -22,16 +19,13 @@ class VitalSigns(BaseModel):
     oxygen_saturation: Optional[float] = Field(None, description="SpO2 percentage")
     temperature_celsius: Optional[float] = Field(None, description="Body temp in °C")
 
-class ResourceEstimate(BaseModel):
+class ClinicalResourceEstimate(BaseModel):
     labs: bool = Field(default=False, description="Blood work / lab tests")
     ecg: bool = Field(default=False, description="Electrocardiogram")
     imaging_xray_ct: bool = Field(default=False, description="X-Ray, CT scan, or MRI")
     iv_fluids_meds: bool = Field(default=False, description="IV fluids or IV/IM medications")
     specialty_consult: bool = Field(default=False, description="Specialist consultation")
     estimated_total_count: int = Field(default=0, description="Total predicted distinct clinical resources")
-
-# Alias for backward compatibility with Technical_plan.md
-ClinicalResourceEstimate = ResourceEstimate
 
 class PatientInput(BaseModel):
     patient_id: Optional[str] = Field(None, description="Unique identifier for the patient/session")
