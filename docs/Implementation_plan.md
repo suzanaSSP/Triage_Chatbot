@@ -60,10 +60,10 @@ This implementation plan outlines the step-by-step roadmap for building the **5-
 - [ ] **Task 2.1: ESI Clinical Knowledge Indexing (ChromaDB)**
   - Ingest ESI Implementation Handbook v4 and emergency clinical guidelines.
   - Generate embeddings using `bge-large-en-v1.5` / `PubMedBERT` and index into persistent **ChromaDB** (`./chroma_db`).
-- [ ] **Task 2.2: Pure-Python Red-Flag Deterministic Node (`red_flags.py`)**
+- [✅] **Task 2.2: Pure-Python Red-Flag Deterministic Node (`red_flags.py`)**
   - Implement regex & keyword rules for high-acuity symptoms (e.g., *"crushing chest pain radiating to arm"*, *"unresponsive"*, *"anaphylaxis"*, *"stroke signs"*).
   - Ensure this node bypasses RAG and LLM calls when triggered, directly returning a Level 1 Emergency Alert.
-- [ ] **Task 2.3: Red-Flag Unit Test Suite**
+- [✅] **Task 2.3: Red-Flag Unit Test Suite**
   - Unit test 100% of emergency vignettes to guarantee zero under-triage and instant execution without LLM latency.
 
 **Deliverables**: Persistent ChromaDB vector store, deterministic `RedFlagNode`, unit test suite.
