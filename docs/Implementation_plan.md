@@ -47,7 +47,7 @@ This implementation plan outlines the step-by-step roadmap for building the **5-
 - [✅] **Task 1.2: Clinical Schema Definition (`schemas.py`)**
   - Implement Pydantic models for `PatientInput`, `VitalSigns`, `ResourceEstimate`, and `TriageAssessment`.
   - Define enum constants for ESI Levels 1 through 5.
-- [ ] **Task 1.3: Benchmark Vignette Dataset Creation**
+- [✅] **Task 1.3: Benchmark Vignette Dataset Creation**
   - Create a test dataset of 50 patient vignettes covering all 5 ESI levels with ground-truth physician labels (`tests/fixtures/vignettes.json`).
 
 **Deliverables**: Clean project environment, validated Pydantic schemas, baseline test dataset.
