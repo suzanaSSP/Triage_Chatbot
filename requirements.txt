@@ -1,10 +1,15 @@
 requests
-dotenv
+python-dotenv
 langgraph
 langchain
+langchain-community
 pydantic
 chromadb
 groq
 chainlit
 ragas
 langsmith
+pypdf
+sentence-transformers
+langchain-huggingface
+langchain-chroma

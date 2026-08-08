@@ -57,7 +57,7 @@ This implementation plan outlines the step-by-step roadmap for building the **5-
 ### Phase 2: ChromaDB RAG & Pure-Python Red-Flag Interceptor
 **Goal**: Build knowledge retrieval grounded in the ESI Handbook and implement a pure-Python red-flag keyword node in LangGraph.
 
-- [ ] **Task 2.1: ESI Clinical Knowledge Indexing (ChromaDB)**
+- [✅] **Task 2.1: ESI Clinical Knowledge Indexing (ChromaDB)**
   - Ingest ESI Implementation Handbook v4 and emergency clinical guidelines.
   - Generate embeddings using `bge-large-en-v1.5` / `PubMedBERT` and index into persistent **ChromaDB** (`./chroma_db`).
 - [✅] **Task 2.2: Pure-Python Red-Flag Deterministic Node (`red_flags.py`)**
