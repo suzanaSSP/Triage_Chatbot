@@ -1,6 +1,7 @@
 # pyrefly: ignore [missing-import]
 from enum import Enum
 from typing import List, Optional
+# pyrefly: ignore [missing-import]
 from pydantic import BaseModel, Field
 
 class ESILevel(int, Enum):
@@ -32,7 +33,7 @@ class PatientInput(BaseModel):
     age: Optional[int] = Field(None, description="Patient age in years")
     gender: Optional[str] = Field(None, description="Biological sex / gender")
     chief_complaint: str = Field(..., description="Primary reason for visit / main symptoms reported")
-    vignette_text: List[str] = Field(default_factory=list, description="List of individual reported symptoms")
+    vignette_text: str = Field(default_factory=list, description="List of individual reported symptoms")
   
 class TriageAssessment(BaseModel):
     patient_id: str

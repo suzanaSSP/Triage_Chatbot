@@ -1,20 +1,27 @@
 from typing import Optional
-from typing import Annotated, Sequence, TypedDict
+from typing_extensions import TypedDict
+# pyrefly: ignore [missing-import]
 from dotenv import load_dotenv  
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage, SystemMessage
 from langchain_groq import ChatGroq
+# pyrefly: ignore [missing-import]
 from langchain_core.tools import tool
+# pyrefly: ignore [missing-import]
 from langgraph.graph.message import add_messages
 # pyrefly: ignore [missing-import]
-from langgraph.graph import StateGraph, END
+from langgraph.graph import StateGraph, START, END
 # pyrefly: ignore [missing-import]
-from langgraph.prebuilt import ToolNode
 from red_flags import is_red_flag
 from schemas import ESILevel, TriageAssessment, PatientInput, ResourceEstimate
 from pathlib import Path
 # pyrefly: ignore [missing-import]
 from langchain_chroma import Chroma
+# pyrefly: ignore [missing-import]
 from langchain_huggingface import HuggingFaceEmbeddings
+# pyrefly: ignore [missing-import]
+from IPython.display import Image, display
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PERSIST_DIR = BASE_DIR / "db" / "chroma_db"
@@ -23,28 +30,30 @@ vectorstore = Chroma(
     persist_directory=str(PERSIST_DIR),
     embedding_function=embeddings
 )
-# Convert to retriever (k=3 or k=4 chunks is usually optimal)
+
 retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
 model = ChatGroq(model="llama-3.3-70b-versatile")
 
-load_dotenv()
-
 class AgentState(TypedDict):
-    patient: PatientInput   # Storing your Pydantic model in the state
-    esi_level: Optional[TriageAssessment]
-    esi_context: str        # Note: String context (no add_messages reducer needed here)
-    
-
+    patient: PatientInput   
+    full_assessment: Optional[TriageAssessment]
+    esi_context: str        
     
 def decide_red_flag(state: AgentState) -> str:
     """Determine if it's an immediate emergency (conditional edge)"""
-    patient_info = state['patient']
-
-    flagged, text = is_red_flag(patient_info.vignette_text)
-
+    flagged, _ = is_red_flag(state['patient'].vignette_text)
     if flagged:
-        esi_level = TriageAssessment(
-            patient_id=patient_info.patient_id,  # dot notation
+        return "red flag"
+    else:
+        return "continue"
+
+@tool
+def immediate_care_node(state: AgentState)-> AgentState:
+    """Assign immediate care for emergency patients"""
+    _, text = is_red_flag(state['patient'].vignette_text)
+    patient_info = state['patient']
+    esi_level = TriageAssessment(
+            patient_id=patient_info.patient_id,  
             triage_level=ESILevel(1),
             urgency_label='Immediate',
             estimated_resources=ResourceEstimate(),
@@ -53,10 +62,8 @@ def decide_red_flag(state: AgentState) -> str:
             recommended_action="Immediate Resuscitation / Call 911",
             target_wait_time="0 minutes"
         )
-        state['esi_level'] = esi_level
-        return "red flag"
-    else:
-        return "continue"
+    state['full_assessment'] = esi_level
+    return state
 
 @tool
 def retriever_node(state: AgentState)->AgentState:
@@ -71,8 +78,12 @@ def retriever_node(state: AgentState)->AgentState:
 
     return state
 
+structured_model = model.with_structured_output(TriageAssessment)
+
 @tool
 def final_classifier_agent_node(state: AgentState)-> AgentState:
+    """Classify patient to an ESI Level based on content from retriever"""
+
     system_prompt = f"""
     You are an expert Emergency Department Triage Nurse.
     Use the following ESI Guidelines retrieved from the ESI Handbook to evaluate the patient:
@@ -91,13 +102,47 @@ def final_classifier_agent_node(state: AgentState)-> AgentState:
     Clinical Reasoning: 
     """
 
-    response = model.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": system_prompt}],
-        temperature=0.0,   # deterministic for retrieval
-        max_completion_tokens=100,
-        stream=False
+    result: TriageAssessment = structured_model.invoke(system_prompt)
+    state["full_assessment"] = result
+
+    return state
+
+def create_workflow():
+    """Create full workflow"""
+    workflow = StateGraph(AgentState)
+    workflow.add_node("retriever", retriever_node)
+    workflow.add_node("classifier", final_classifier_agent_node)
+    workflow.add_node("immediate care", immediate_care_node)
+
+    workflow.add_conditional_edges(
+        START,
+        decide_red_flag,
+        {
+            "red flag": "immediate care",
+            "continue": "retriever"
+        }
     )
-    answer = response.choices[0].message.content.strip()
+
+    workflow.add_edge("retriever", "classifier")
+    workflow.add_edge("classifier", END)
+    workflow.add_edge("immediate care", END)
+
+    app = workflow.compile()
+    png_data = app.get_graph().draw_mermaid_png()
+    with open("graph_workflow.png", "wb") as f:
+        f.write(png_data)
+    return app
 
 
+if __name__ == "__main__":
+    # test_patient = PatientInput(
+    #     'PAT000005',
+    #     57,
+    #     'M',
+    #     'Cardiac Arrest',
+    #     "57yo M presenting with Cardiac arrest. Patient appears critically ill. Immediate intervention required. Airway assessed, vitals unstable."
+    # )
+    # test_state = {
+    #     'patient': test_patient,
+    # }
+    create_workflow()
