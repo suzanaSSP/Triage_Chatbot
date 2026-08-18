@@ -39,7 +39,7 @@ class TriageAssessment(BaseModel):
     patient_id: str
     triage_level: ESILevel = Field(..., ge=1, le=5, description="ESI Triage Level 1 to 5")
     urgency_label: str  # Immediate, Emergent, Urgent, Less Urgent, Non-Urgent
-    primary_symptoms: List[str]
+    primary_symptoms: str
     estimated_resources: ResourceEstimate
     clinical_reasoning: str
     red_flags_detected: List[str]

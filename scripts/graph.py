@@ -47,7 +47,6 @@ def decide_red_flag(state: AgentState) -> str:
     else:
         return "continue"
 
-@tool
 def immediate_care_node(state: AgentState)-> AgentState:
     """Assign immediate care for emergency patients"""
     _, text = is_red_flag(state['patient'].vignette_text)
@@ -56,16 +55,16 @@ def immediate_care_node(state: AgentState)-> AgentState:
             patient_id=patient_info.patient_id,  
             triage_level=ESILevel(1),
             urgency_label='Immediate',
+            primary_symptoms=patient_info.chief_complaint,
             estimated_resources=ResourceEstimate(),
             clinical_reasoning="Triggered red flag safety rule.",
-            red_flags_detected=[text] if isinstance(text, str) else text,
+            red_flags_detected=text,
             recommended_action="Immediate Resuscitation / Call 911",
             target_wait_time="0 minutes"
         )
     state['full_assessment'] = esi_level
     return state
 
-@tool
 def retriever_node(state: AgentState)->AgentState:
     """Retrieves relevant ESI Handbook content to avoid hallucination in LLM decision making"""
     patient = state["patient"]
@@ -80,7 +79,6 @@ def retriever_node(state: AgentState)->AgentState:
 
 structured_model = model.with_structured_output(TriageAssessment)
 
-@tool
 def final_classifier_agent_node(state: AgentState)-> AgentState:
     """Classify patient to an ESI Level based on content from retriever"""
 
@@ -90,21 +88,37 @@ def final_classifier_agent_node(state: AgentState)-> AgentState:
     --- RETRIEVED ESI GUIDELINES ---
     {state['esi_context']}
     --------------------------------
-    Patient Complaint & Vitals: {state['patient_symptoms']}
+    Patient Complaint: {state['patient'].vignette_text}
     Your Task:
     1. Estimate the number of resources needed (0, 1, or 2+).
     2. Assign the appropriate ESI Triage Level (2, 3, 4, or 5).
     3. Provide your clinical reasoning.
-
-    Output should look like this:
-    ESI Triage Level: 
-    Resources: 
-    Clinical Reasoning: 
     """
 
     result: TriageAssessment = structured_model.invoke(system_prompt)
     state["full_assessment"] = result
 
+    return state
+
+def write_down_output_down(state: AgentState)-> AgentState:
+    result = state['full_assessment']
+    """Save assessment to output file"""
+    filename = f"triage_summary_{result.patient_id}.txt"
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write("=========================================\n")
+        f.write("      PATIENT ESI TRIAGE ASSESSMENT      \n")
+        f.write("=========================================\n\n")
+        f.write(f"Patient ID: {result.patient_id}\n")
+        f.write(f"ESI Triage Level: Level {result.triage_level}\n")
+        f.write(f"Urgency Label: {result.urgency_label}\n")
+        f.write(f"Primary Symptoms: {result.primary_symptoms}\n\n")
+        f.write(f"Estimated Resources:\n{result.estimated_resources.model_dump_json(indent=2)}\n\n")
+        f.write(f"Clinical Reasoning:\n{result.clinical_reasoning}\n\n")
+        f.write(f"Red Flags Detected: {result.red_flags_detected}\n")
+        f.write(f"Recommended Action: {result.recommended_action}\n")
+        f.write(f"Target Wait Time: {result.target_wait_time}\n")
+        f.write("=========================================\n")
+    print(f"📄 Triage summary saved to '{filename}'")
     return state
 
 def create_workflow():
@@ -113,6 +127,7 @@ def create_workflow():
     workflow.add_node("retriever", retriever_node)
     workflow.add_node("classifier", final_classifier_agent_node)
     workflow.add_node("immediate care", immediate_care_node)
+    workflow.add_node('writer', write_down_output_down)
 
     workflow.add_conditional_edges(
         START,
@@ -124,8 +139,9 @@ def create_workflow():
     )
 
     workflow.add_edge("retriever", "classifier")
-    workflow.add_edge("classifier", END)
-    workflow.add_edge("immediate care", END)
+    workflow.add_edge("classifier", 'writer')
+    workflow.add_edge("immediate care",'writer')
+    workflow.add_edge('writer', END)
 
     app = workflow.compile()
     png_data = app.get_graph().draw_mermaid_png()
@@ -135,14 +151,15 @@ def create_workflow():
 
 
 if __name__ == "__main__":
-    # test_patient = PatientInput(
-    #     'PAT000005',
-    #     57,
-    #     'M',
-    #     'Cardiac Arrest',
-    #     "57yo M presenting with Cardiac arrest. Patient appears critically ill. Immediate intervention required. Airway assessed, vitals unstable."
-    # )
-    # test_state = {
-    #     'patient': test_patient,
-    # }
-    create_workflow()
+    test_patient = PatientInput(
+        patient_id='PAT000005',
+        age=57,
+        gender='M',
+        chief_complaint='Cardiac Arrest',
+        vignette_text="57yo M presenting with Cardiac arrest. Patient appears critically ill. Immediate intervention required. Airway assessed, vitals unstable."
+    )
+    test_state = {
+        'patient': test_patient,
+    }
+    app = create_workflow()
+    app.invoke(test_state)

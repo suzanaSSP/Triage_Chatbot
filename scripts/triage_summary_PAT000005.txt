@@ -1,0 +1,26 @@
+=========================================
+      PATIENT ESI TRIAGE ASSESSMENT      
+=========================================
+
+Patient ID: PAT000005
+ESI Triage Level: Level 1
+Urgency Label: Immediate
+Primary Symptoms: Cardiac Arrest
+
+Estimated Resources:
+{
+  "labs": false,
+  "ecg": false,
+  "imaging_xray_ct": false,
+  "iv_fluids_meds": false,
+  "specialty_consult": false,
+  "estimated_total_count": 0
+}
+
+Clinical Reasoning:
+Triggered red flag safety rule.
+
+Red Flags Detected: ['cardiac arrest', 'immediate intervention']
+Recommended Action: Immediate Resuscitation / Call 911
+Target Wait Time: 0 minutes
+=========================================
