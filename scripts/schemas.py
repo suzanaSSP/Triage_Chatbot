@@ -19,7 +19,7 @@ class VitalSigns(BaseModel):
     oxygen_saturation: Optional[float] = Field(None, description="SpO2 percentage")
     temperature_celsius: Optional[float] = Field(None, description="Body temp in °C")
 
-class ClinicalResourceEstimate(BaseModel):
+class ResourceEstimate(BaseModel):
     labs: bool = Field(default=False, description="Blood work / lab tests")
     ecg: bool = Field(default=False, description="Electrocardiogram")
     imaging_xray_ct: bool = Field(default=False, description="X-Ray, CT scan, or MRI")
@@ -32,16 +32,13 @@ class PatientInput(BaseModel):
     age: Optional[int] = Field(None, description="Patient age in years")
     gender: Optional[str] = Field(None, description="Biological sex / gender")
     chief_complaint: str = Field(..., description="Primary reason for visit / main symptoms reported")
-    symptoms: List[str] = Field(default_factory=list, description="List of individual reported symptoms")
-    vitals: Optional[VitalSigns] = Field(None, description="Patient vital signs if measured at intake")
-    medical_history: List[str] = Field(default_factory=list, description="Pre-existing medical conditions")
-
+    vignette_text: List[str] = Field(default_factory=list, description="List of individual reported symptoms")
+  
 class TriageAssessment(BaseModel):
     patient_id: str
-    triage_level: int = Field(..., ge=1, le=5, description="ESI Triage Level 1 to 5")
+    triage_level: ESILevel = Field(..., ge=1, le=5, description="ESI Triage Level 1 to 5")
     urgency_label: str  # Immediate, Emergent, Urgent, Less Urgent, Non-Urgent
     primary_symptoms: List[str]
-    vitals: VitalSigns
     estimated_resources: ResourceEstimate
     clinical_reasoning: str
     red_flags_detected: List[str]
