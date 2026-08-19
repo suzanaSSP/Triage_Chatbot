@@ -2,15 +2,12 @@ from typing import Optional
 from typing_extensions import TypedDict
 # pyrefly: ignore [missing-import]
 from dotenv import load_dotenv  
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage, SystemMessage
+# pyrefly: ignore [missing-import]
 from langchain_groq import ChatGroq
-# pyrefly: ignore [missing-import]
-from langchain_core.tools import tool
-# pyrefly: ignore [missing-import]
-from langgraph.graph.message import add_messages
 # pyrefly: ignore [missing-import]
 from langgraph.graph import StateGraph, START, END
 # pyrefly: ignore [missing-import]
+from langchain_core.messages import SystemMessage, HumanMessage
 from red_flags import is_red_flag
 from schemas import ESILevel, TriageAssessment, PatientInput, ResourceEstimate
 from pathlib import Path
@@ -18,8 +15,6 @@ from pathlib import Path
 from langchain_chroma import Chroma
 # pyrefly: ignore [missing-import]
 from langchain_huggingface import HuggingFaceEmbeddings
-# pyrefly: ignore [missing-import]
-from IPython.display import Image, display
 
 load_dotenv()
 
@@ -32,7 +27,7 @@ vectorstore = Chroma(
 )
 
 retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
-model = ChatGroq(model="llama-3.3-70b-versatile")
+model = ChatGroq(model="openai/gpt-oss-120b")
 
 class AgentState(TypedDict):
     patient: PatientInput   
@@ -82,9 +77,8 @@ structured_model = model.with_structured_output(TriageAssessment)
 def final_classifier_agent_node(state: AgentState)-> AgentState:
     """Classify patient to an ESI Level based on content from retriever"""
 
-    system_prompt = f"""
-    You are an expert Emergency Department Triage Nurse.
-    Use the following ESI Guidelines retrieved from the ESI Handbook to evaluate the patient:
+    system_msg = SystemMessage(content=" You are an expert Emergency Department Triage Nurse. Analyze the patient using the ESI guidelines and assign an ESI level.")
+    human_msg = HumanMessage(content=f"""
     --- RETRIEVED ESI GUIDELINES ---
     {state['esi_context']}
     --------------------------------
@@ -93,9 +87,9 @@ def final_classifier_agent_node(state: AgentState)-> AgentState:
     1. Estimate the number of resources needed (0, 1, or 2+).
     2. Assign the appropriate ESI Triage Level (2, 3, 4, or 5).
     3. Provide your clinical reasoning.
-    """
+    """)
 
-    result: TriageAssessment = structured_model.invoke(system_prompt)
+    result: TriageAssessment = structured_model.invoke([system_msg, human_msg])
     state["full_assessment"] = result
 
     return state
@@ -152,11 +146,11 @@ def create_workflow():
 
 if __name__ == "__main__":
     test_patient = PatientInput(
-        patient_id='PAT000005',
-        age=57,
-        gender='M',
-        chief_complaint='Cardiac Arrest',
-        vignette_text="57yo M presenting with Cardiac arrest. Patient appears critically ill. Immediate intervention required. Airway assessed, vitals unstable."
+        patient_id='PAT000011',
+        age=69,
+        gender='F',
+        chief_complaint='Chest Pain',
+        vignette_text="69-year-old female presents with Chest pain. 69yo F c/o Chest pain. Patient in moderate distress. Rapid assessment indicates emergent condition. Vital signs concerning."
     )
     test_state = {
         'patient': test_patient,

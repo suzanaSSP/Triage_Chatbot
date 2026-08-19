@@ -1,0 +1,26 @@
+=========================================
+      PATIENT ESI TRIAGE ASSESSMENT      
+=========================================
+
+Patient ID: patient_001
+ESI Triage Level: Level 2
+Urgency Label: High Acuity - Potential Acute Coronary Syndrome
+Primary Symptoms: Chest pain
+
+Estimated Resources:
+{
+  "labs": true,
+  "ecg": true,
+  "imaging_xray_ct": false,
+  "iv_fluids_meds": true,
+  "specialty_consult": false,
+  "estimated_total_count": 3
+}
+
+Clinical Reasoning:
+The patient is a 69‑year‑old female presenting with chest pain and is in moderate distress. Age >65, acute chest pain, and concerning vital signs (implied hemodynamic instability) are high‑risk features for acute coronary syndrome or other life‑threatening cardiac events. According to ESI guidelines, any patient with potential ACS, especially with abnormal vitals, requires rapid assessment, ECG within 10 minutes, cardiac monitoring, IV access, and laboratory work. This exceeds the resource threshold for a level‑2 assignment (requires >1 resource and high‑risk condition). Therefore, the appropriate triage level is ESI 2.
+
+Red Flags Detected: ['Chest pain', 'Age >65', 'Concerning vital signs', 'Moderate distress']
+Recommended Action: Place on cardiac monitor, obtain 12‑lead ECG within 10 minutes, establish IV access, draw cardiac enzymes and basic labs, give aspirin if not contraindicated, consider nitroglycerin per protocol, and notify the physician for possible ACS pathway.
+Target Wait Time: Within 10 minutes
+=========================================

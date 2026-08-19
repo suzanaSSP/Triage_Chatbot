@@ -73,12 +73,12 @@ This implementation plan outlines the step-by-step roadmap for building the **5-
 ### Phase 3: LangGraph Agent Engine & Groq LLM Integration
 **Goal**: Orchestrate the conversational state graph to collect symptoms, assess vitals, retrieve ESI guidelines, estimate resources, and assign triage levels via Groq API.
 
-- [ ] **Task 3.1: LangGraph State Graph Design (`graph.py`)**
-  - Define graph state and nodes: `RedFlagNode`, `IntakeNode`, `RetrieverNode`, `ResourceEstimatorNode`, `FinalClassifierNode`.
+- [✅] **Task 3.1: LangGraph State Graph Design (`graph.py`)**
+  - Define graph state and nodes: `RedFlagNode`, `RetrieverNode`, `FinalClassifierNode`.
   - Configure conditional routing: If `RedFlagNode` fires $\rightarrow$ bypass to `EmergencyAlertNode`; else $\rightarrow$ proceed through RAG & Groq LLM.
-- [ ] **Task 3.2: Groq LLM API Integration (`LLaMA-3.3-70B`)**
+- [✅] **Task 3.2: Groq LLM API Integration (`LLaMA-3.3-70B`)**
   - Configure Groq API client with structured Pydantic output parsing.
-- [ ] **Task 3.3: Resource Counting & Decision Reasoning**
+- [✅] **Task 3.3: Resource Counting & Decision Reasoning**
   - Implement prompt logic to estimate hospital resources (0, 1, or $\ge 2$) for Level 3 vs Level 4 vs Level 5 classification.
 
 **Deliverables**: Operational `TriageGraphEngine` performing stateful triage logic.

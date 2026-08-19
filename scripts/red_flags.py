@@ -9,7 +9,7 @@ KEYWORDS_ESI_1 = [
     "ineffective airway clearance", "ineffective respiratory pattern", 
     "ineffective tissue perfusion", "anaphylaxis", 
     "hypotension with signs of hypoperfusion", "hypotension", 
-    "chest pain", "hypoglycemia", "bradycardia", "severe tachycardia", 
+     "hypoglycemia", "bradycardia", "severe tachycardia", 
     "flaccid infant", "cardiac pulmonary arrest", "cardiac arrest", 
     "appears imminent", "immediate intervention", "respiratory distress",
     "hemorrhage", "trauma of head", "trauma of neck", "trauma of abdomen", "trauma of chest"
