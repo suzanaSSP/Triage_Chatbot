@@ -88,10 +88,10 @@ This implementation plan outlines the step-by-step roadmap for building the **5-
 ### Phase 4: Chainlit Interactive Chat Application
 **Goal**: Build a modern, responsive chat interface using Chainlit that connects directly to the LangGraph engine.
 
-- [ ] **Task 4.1: Chainlit Application (`app.py`)**
+- [✅] **Task 4.1: Chainlit Application (`app.py`)**
   - Implement `@cl.on_chat_start` and `@cl.on_message` handlers connecting to `TriageGraphEngine`.
   - Stream Groq LLM output tokens in real-time to the Chainlit UI.
-- [ ] **Task 4.2: UI Enhancements & Nurse Handoff Summary**
+- [✅] **Task 4.2: UI Enhancements & Nurse Handoff Summary**
   - Add interactive element cards for color-coded triage badges (Red = Level 1, Orange = Level 2, Yellow = Level 3, Green = Level 4, Blue = Level 5).
   - Render clinical SBAR summaries for nurse review.
 

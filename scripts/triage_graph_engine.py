@@ -34,9 +34,17 @@ class AgentState(TypedDict):
     full_assessment: Optional[TriageAssessment]
     esi_context: str        
     
+def get_vignette_str(patient: PatientInput) -> str:
+    """Helper to ensure vignette_text is returned as a single string."""
+    v = patient.vignette_text
+    if isinstance(v, list):
+        return " ".join(v)
+    return str(v or "")
+
 def decide_red_flag(state: AgentState) -> str:
     """Determine if it's an immediate emergency (conditional edge)"""
-    flagged, _ = is_red_flag(state['patient'].vignette_text)
+    vignette_str = get_vignette_str(state['patient'])
+    flagged, _ = is_red_flag(vignette_str)
     if flagged:
         return "red flag"
     else:
@@ -44,7 +52,8 @@ def decide_red_flag(state: AgentState) -> str:
 
 def immediate_care_node(state: AgentState)-> AgentState:
     """Assign immediate care for emergency patients"""
-    _, text = is_red_flag(state['patient'].vignette_text)
+    vignette_str = get_vignette_str(state['patient'])
+    _, text = is_red_flag(vignette_str)
     patient_info = state['patient']
     esi_level = TriageAssessment(
             patient_id=patient_info.patient_id,  
@@ -63,9 +72,8 @@ def immediate_care_node(state: AgentState)-> AgentState:
 def retriever_node(state: AgentState)->AgentState:
     """Retrieves relevant ESI Handbook content to avoid hallucination in LLM decision making"""
     patient = state["patient"]
-    
-    # Use chief_complaint or full vignette_text for Chroma search query
-    query_text = f"{patient.chief_complaint} " + " ".join(patient.vignette_text) 
+    vignette_str = get_vignette_str(patient)
+    query_text = f"{patient.chief_complaint} {vignette_str}".strip()
     docs = retriever.invoke(query_text)
     retrieved_esi_guidelines = "\n\n".join([doc.page_content for doc in docs])
     state['esi_context'] = retrieved_esi_guidelines
@@ -97,8 +105,10 @@ def final_classifier_agent_node(state: AgentState)-> AgentState:
 def write_down_output_down(state: AgentState)-> AgentState:
     result = state['full_assessment']
     """Save assessment to output file"""
-    filename = f"triage_summary_{result.patient_id}.txt"
-    with open(filename, "w", encoding="utf-8") as f:
+    output_dir = Path(__file__).resolve().parent / "output_files"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    filepath = output_dir / f"triage_summary_{result.patient_id}.txt"
+    with open(filepath, "w", encoding="utf-8") as f:
         f.write("=========================================\n")
         f.write("      PATIENT ESI TRIAGE ASSESSMENT      \n")
         f.write("=========================================\n\n")
@@ -112,7 +122,7 @@ def write_down_output_down(state: AgentState)-> AgentState:
         f.write(f"Recommended Action: {result.recommended_action}\n")
         f.write(f"Target Wait Time: {result.target_wait_time}\n")
         f.write("=========================================\n")
-    print(f"📄 Triage summary saved to '{filename}'")
+    print(f"📄 Triage summary saved to '{filepath}'")
     return state
 
 def create_workflow():

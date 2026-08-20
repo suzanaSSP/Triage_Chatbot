@@ -33,7 +33,7 @@ class PatientInput(BaseModel):
     age: Optional[int] = Field(None, description="Patient age in years")
     gender: Optional[str] = Field(None, description="Biological sex / gender")
     chief_complaint: str = Field(..., description="Primary reason for visit / main symptoms reported")
-    vignette_text: str = Field(default_factory=list, description="List of individual reported symptoms")
+    vignette_text: str = Field(default="", description="Patient clinical vignette or symptoms description")
   
 class TriageAssessment(BaseModel):
     patient_id: str
