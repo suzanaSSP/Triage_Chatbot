@@ -1,5 +1,5 @@
 """
-UI Formatter for Medical Triage Chatbot Chainlit Interface.
+UI Formatter for Medical Triage Chatbot Streamlit Interface.
 Formats TriageAssessment Pydantic objects into native rich Markdown cards.
 """
 
